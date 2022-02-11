@@ -41,11 +41,8 @@ export default function Index() {
   return (
     <div className="remix__page">
       <main>
-        <h1>
-          Welcome to Remix!
-          <br />
-          <small>(with Architect)</small>
-        </h1>
+        <h1>Welcome to Remix!</h1>
+        <h2>Running on Architect</h2>
         <p>We're stoked that you're here. 🥳</p>
         <p>
           Feel free to take a look around the code to see how Remix does things, it might be a bit

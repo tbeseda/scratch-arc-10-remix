@@ -1,10 +1,9 @@
-const { copyFileSync, existsSync, mkdirSync } = require('fs');
+const { fork } = require('child_process');
 const { join } = require('path');
 const { MY_NAME } = require('./constants');
-const { cleanup, generateConfig, mergeConfig } = require('./util');
+const { cleanup, createServerHandler, generateConfig, mergeConfig } = require('./util');
 // risky use of Remix internals:
 const { BuildMode } = require('@remix-run/dev/build');
-const remixCommands = require('@remix-run/dev/cli/commands');
 const remixCompiler = require('@remix-run/dev/compiler');
 
 let watcher;
@@ -16,31 +15,28 @@ function setHttp({ inventory: { inv } }) {
 
   if (arc[MY_NAME]) {
     const { pluginConfig } = mergeConfig(arc);
-    console.log(pluginConfig);
-    const serverDir = join(pluginConfig.buildDirectory, 'server');
-
-    if (!existsSync(serverDir)) mkdirSync(serverDir, { recursive: true });
-    copyFileSync(join(__dirname, 'server', 'index.js'), join(serverDir, 'index.js'));
 
     return {
       method: 'any',
       path: pluginConfig.mount,
-      src: serverDir,
+      src: pluginConfig.serverDirectory,
     };
   }
 }
 
 async function sandboxStart({ inventory: { inv } }) {
-  console.log('Arc is starting Remix watch...');
-  // TODO: handle sandbox restart -- see README
+  const {
+    _project: { arc },
+  } = inv;
 
-  const { _project } = inv;
-
-  if (_project.arc[MY_NAME]) {
+  if (arc[MY_NAME]) {
     const config = await generateConfig(inv);
-    // ! awaiting .watch will never resolve
-    // ? child fork process this:
-    watcher = remixCommands.watch(config, BuildMode.Development);
+
+    console.log('Arc is starting Remix watch...');
+
+    createServerHandler(inv);
+
+    watcher = fork(join(__dirname, 'watcher.js'), [JSON.stringify(config), BuildMode.Development]);
   }
 }
 
@@ -52,6 +48,7 @@ async function deployStart({ inventory: { inv } }) {
   // build the thing
   if (arc[MY_NAME]) {
     const config = await generateConfig(inv);
+    createServerHandler(inv);
     await remixCompiler.build(config, { mode: BuildMode.Production });
   }
 }
@@ -69,9 +66,12 @@ module.exports = {
   sandbox: {
     start: sandboxStart,
     async end({ inventory: { inv } }) {
+      console.log('Arc is cleaning up Remix artifacts...');
+
       if (watcher) {
-        // TODO close remix watcher
+        watcher.kill();
       }
+
       cleanup(inv);
     },
   },

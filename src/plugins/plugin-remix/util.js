@@ -1,4 +1,5 @@
-const { rmSync } = require('fs');
+const { copyFileSync, existsSync, mkdirSync, rmSync } = require('fs');
+const { join } = require('path');
 const { BUILD_DIR, MY_NAME, REMIX_OVERWRITES } = require('./constants');
 const remixConfig = require('@remix-run/dev/config');
 
@@ -15,6 +16,8 @@ function mergeConfig(arc) {
     mount: '/*',
     appDirectory: MY_NAME,
     buildDirectory: BUILD_DIR,
+    serverDirectory: `${BUILD_DIR}/server`,
+    serverHandler: join(__dirname, 'server', 'index.js'),
   };
 
   // look at @remix plugin options:
@@ -23,13 +26,16 @@ function mergeConfig(arc) {
       const name = option[0];
       const value = option[1];
 
-      if (name === 'appDirectory') {
+      if (name === 'app-directory') {
         pluginConfig.appDirectory = value;
         mergedRemixConfig.appDirectory = value;
       } else if (name === 'mount') {
         pluginConfig.mount = value;
-      } else if (name === 'buildDirectory') {
+      } else if (name === 'server-handler') {
+        pluginConfig.serverHandler = value;
+      } else if (name === 'build-directory') {
         pluginConfig.buildDirectory = value;
+        pluginConfig.serverDirectory = `${value}/server`;
 
         for (const key in mergedRemixConfig) {
           mergedRemixConfig[key] = mergedRemixConfig[key].replace(BUILD_DIR, value);
@@ -39,6 +45,21 @@ function mergeConfig(arc) {
   }
 
   return { pluginConfig, mergedRemixConfig };
+}
+
+/**
+ *
+ * @description create Arc handler for Remix server
+ * @param {*} inv
+ * @returns {void}
+ */
+function createServerHandler(inv) {
+  const { pluginConfig } = mergeConfig(inv._project.arc);
+
+  if (!existsSync(pluginConfig.serverDirectory))
+    mkdirSync(pluginConfig.serverDirectory, { recursive: true });
+
+  copyFileSync(pluginConfig.serverHandler, join(pluginConfig.serverDirectory, 'index.js'));
 }
 
 /**
@@ -68,8 +89,6 @@ async function generateConfig(inv) {
  * @returns {void}
  */
 function cleanup(inv) {
-  console.log('Arc is cleaning up Remix artifacts...');
-
   const { mergedRemixConfig, pluginConfig } = mergeConfig(inv._project.arc);
 
   rmSync(mergedRemixConfig.assetsBuildDirectory, { recursive: true, force: true });
@@ -78,6 +97,7 @@ function cleanup(inv) {
 
 module.exports = {
   cleanup,
+  createServerHandler,
   generateConfig,
   mergeConfig,
 };

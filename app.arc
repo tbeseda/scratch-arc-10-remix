@@ -5,8 +5,9 @@ arc-10-remix
 plugin-remix
 
 @remix
-appDirectory app # optional. defaults to "remix"
-buildDirectory .build # optional. defaults to ".remix"
-# mount /remixed # optional. defaults to "/*". not working yet!
+app-directory app # defaults to "remix"
+build-directory .build # defaults to ".remix"
+# mount /remixed # defaults to "/*". not working yet!
+# server-handler path/to/custom/handler/index.js # advanced usage
 
 @static
