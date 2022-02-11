@@ -3,7 +3,9 @@ arc-10-remix
 
 @static
 
-@http
-/*
-  method any
-  src server
+@plugins
+plugin-remix
+
+@remix
+appDirectory app # defaults to remix
+# mount /remixed # not working
