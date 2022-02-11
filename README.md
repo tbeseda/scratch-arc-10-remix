@@ -1,3 +1,11 @@
+This is a scratch project used while working on [@architect/plugin-remix](https://github.com/architect/plugin-remix).
+
+The following README was maintained for archival purposes.
+
+---
+
+# `arc-plugin-remix`
+
 Working toward an Architect v10 plugin for Remix
 
 ## objective
