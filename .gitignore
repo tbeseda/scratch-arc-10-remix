@@ -3,8 +3,7 @@ node_modules
 
 # Remix things
 .remix
-public/build
-remix.config.js
+.build
 
 # Arc things
 preferences.arc

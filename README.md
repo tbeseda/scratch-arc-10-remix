@@ -30,8 +30,8 @@ enable Remix watcher
 
 ## notes
 
-- the big caveat here is that remix.config.js is generated, saved, loaded (by Remix), and removed during the Sandbox lifecycle. so it's git-ignored.
-  - initially, I tried to create a default remix.config from the plugin, merge with a user remix.config, and send that to Remix. however, Remix requires an actual remix.config.js file on disk. so I started by writing to the .remix/ temporary directory, but currently Remix expects the remix.config to be a sibling of package.json.
+- this plugin will overwrite Remix config's build directories set in remix.config.js
+  - the rest of remix.config.js is respected
 - in order to get Remix-generated static assets to a bucket, the `assetsBuildDirectory` option in Remix is set to public/.remix. it would be cool to put them inside .remix/assets behind a static asset server while developing, and move them to a bucket when deploying
 
 ## bugs
